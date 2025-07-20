@@ -43,17 +43,6 @@ export default function RankingsPage() {
   // Get available LSCs based on selected region
   const availableLSCs = filters.region === 'all' ? getAllLSCs() : getLSCsByRegion(filters.region);
 
-  useEffect(() => {
-    fetchRankings();
-  }, [filters]);
-
-  // Reset LSC when region changes
-  useEffect(() => {
-    if (filters.region === 'all') {
-      setFilters(prev => ({ ...prev, lsc: 'all' }));
-    }
-  }, [filters.region]);
-
   const fetchRankings = async () => {
     try {
       setLoading(true);
@@ -76,6 +65,17 @@ export default function RankingsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRankings();
+  }, [filters]);
+
+  // Reset LSC when region changes
+  useEffect(() => {
+    if (filters.region === 'all') {
+      setFilters(prev => ({ ...prev, lsc: 'all' }));
+    }
+  }, [filters.region]);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();

@@ -14,6 +14,12 @@ export async function GET(request: NextRequest) {
     const gender = searchParams.get('gender') || 'all';
     const limit = parseInt(searchParams.get('limit') || '100');
 
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      console.warn('No database connection available, returning empty results');
+      return NextResponse.json([]);
+    }
+
     // For now, let's get all rankings and filter in the application
     // This avoids the complex query builder issues
     const results = await db

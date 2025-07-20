@@ -5,6 +5,12 @@ import { eq, sql, asc } from 'drizzle-orm';
 
 export async function GET() {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      console.warn('No database connection available, returning empty results');
+      return NextResponse.json([]);
+    }
+
     // Get all swimmers with their stats
     const swimmersWithStats = await db
       .select({

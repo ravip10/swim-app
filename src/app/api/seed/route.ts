@@ -3,6 +3,15 @@ import { seedSampleData } from '@/lib/sample-data';
 
 export async function POST() {
   try {
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      console.warn('No database connection available, skipping seed');
+      return NextResponse.json({ 
+        success: false, 
+        error: 'No database connection available' 
+      }, { status: 500 });
+    }
+
     const result = await seedSampleData();
     
     return NextResponse.json({ 
