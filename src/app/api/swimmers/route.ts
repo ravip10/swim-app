@@ -1,101 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import sql from '@/lib/db';
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+import { swimmers, times } from '@/lib/schema';
+import { eq, sql } from 'drizzle-orm';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const region = searchParams.get('region');
-    const ageGroup = searchParams.get('ageGroup');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    // Get all swimmers with their stats
+    const swimmersWithStats = await db
+      .select({
+        id: swimmers.id,
+        name: swimmers.name,
+        email: swimmers.email,
+        club: swimmers.club,
+        region: swimmers.region,
+        age: swimmers.age,
+        gender: swimmers.gender,
+        created_at: swimmers.created_at,
+        updated_at: swimmers.updated_at,
+        event_count: sql<number>`count(distinct ${times.event_id})`,
+        personal_bests: sql<number>`count(case when ${times.is_personal_best} = true then 1 end)`,
+        total_times: sql<number>`count(${times.id})`,
+      })
+      .from(swimmers)
+      .leftJoin(times, eq(swimmers.id, times.swimmer_id))
+      .groupBy(swimmers.id, swimmers.name, swimmers.email, swimmers.club, swimmers.region, swimmers.age, swimmers.gender, swimmers.created_at, swimmers.updated_at)
+      .orderBy(swimmers.name);
 
-    let query = `
-      SELECT 
-        s.id,
-        s.name,
-        s.club,
-        s.region,
-        s.state,
-        s.gender,
-        s.birth_date,
-        COUNT(r.id) as total_results,
-        COUNT(CASE WHEN r.is_personal_best = true THEN 1 END) as personal_bests
-      FROM swimmers s
-      LEFT JOIN results r ON s.id = r.swimmer_id
-    `;
-
-    const conditions = [];
-    const params = [];
-
-    if (region && region !== 'all') {
-      conditions.push('s.region = $1');
-      params.push(region);
-    }
-
-    if (ageGroup && ageGroup !== 'all') {
-      // Add age group filtering logic
-      conditions.push('EXTRACT(YEAR FROM AGE(s.birth_date)) BETWEEN $2 AND $3');
-      if (ageGroup === '10u') {
-        params.push(0, 10);
-      } else if (ageGroup === '11-12') {
-        params.push(11, 12);
-      } else if (ageGroup === '13-14') {
-        params.push(13, 14);
-      } else if (ageGroup === '15-16') {
-        params.push(15, 16);
-      } else if (ageGroup === '17-18') {
-        params.push(17, 18);
-      } else if (ageGroup === '19+') {
-        params.push(19, 100);
-      }
-    }
-
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    query += `
-      GROUP BY s.id, s.name, s.club, s.region, s.state, s.gender, s.birth_date
-      ORDER BY s.name
-      LIMIT $${params.length + 1}
-    `;
-    params.push(limit);
-
-    const swimmers = await sql.query(query, params);
-
-    return NextResponse.json({
-      success: true,
-      data: swimmers,
-      count: swimmers.length
-    });
+    return NextResponse.json(swimmersWithStats);
   } catch (error) {
     console.error('Error fetching swimmers:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch swimmers' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { name, club, region, state, gender, birthDate } = body;
-
-    const result = await sql.query(`
-      INSERT INTO swimmers (name, club, region, state, gender, birth_date)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING *
-    `, [name, club, region, state, gender, birthDate]);
-
-    return NextResponse.json({
-      success: true,
-      data: result[0]
-    });
-  } catch (error) {
-    console.error('Error creating swimmer:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to create swimmer' },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 } 

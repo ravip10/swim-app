@@ -1,34 +1,97 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  TrendingUp, 
-  Award,
-  MapPin,
-  Users
-} from "lucide-react";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Search, TrendingUp, Trophy, Target } from 'lucide-react';
+
+interface Swimmer {
+  id: string;
+  name: string;
+  email: string;
+  club: string;
+  region: string;
+  age: number;
+  gender: string;
+  event_count: string;
+  personal_bests: string;
+  total_times: string;
+}
 
 export default function SwimmersPage() {
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Swimmers</h1>
-          <p className="text-muted-foreground">
-            Manage swimmer profiles and track individual progress
-          </p>
+  const [swimmers, setSwimmers] = useState<Swimmer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [regionFilter, setRegionFilter] = useState('all');
+  const [ageFilter, setAgeFilter] = useState('all');
+
+  useEffect(() => {
+    fetchSwimmers();
+  }, []);
+
+  const fetchSwimmers = async () => {
+    try {
+      const response = await fetch('/api/swimmers');
+      const data = await response.json();
+      setSwimmers(data);
+    } catch (error) {
+      console.error('Error fetching swimmers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const getRegionAbbr = (region: string) => {
+    const regionMap: { [key: string]: string } = {
+      'Northeast': 'NE',
+      'Southeast': 'SE', 
+      'Midwest': 'MW',
+      'West': 'W',
+    };
+    return regionMap[region] || region.substring(0, 2).toUpperCase();
+  };
+
+  const filteredSwimmers = swimmers.filter(swimmer => {
+    const matchesSearch = swimmer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         swimmer.club.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         swimmer.region.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRegion = regionFilter === 'all' || swimmer.region === regionFilter;
+    
+    const matchesAge = ageFilter === 'all' || 
+      (ageFilter === '10u' && swimmer.age <= 10) ||
+      (ageFilter === '11-12' && swimmer.age >= 11 && swimmer.age <= 12) ||
+      (ageFilter === '13-14' && swimmer.age >= 13 && swimmer.age <= 14) ||
+      (ageFilter === '15-16' && swimmer.age >= 15 && swimmer.age <= 16) ||
+      (ageFilter === '17-18' && swimmer.age >= 17 && swimmer.age <= 18) ||
+      (ageFilter === '19+' && swimmer.age >= 19);
+
+    return matchesSearch && matchesRegion && matchesAge;
+  });
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading swimmers...</div>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Swimmer
-        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Swimmers</h1>
+        <p className="text-muted-foreground mt-2">
+          Manage swimmer profiles and track individual progress
+        </p>
       </div>
 
       {/* Search and Filters */}
@@ -40,24 +103,26 @@ export default function SwimmersPage() {
               <Input
                 placeholder="Search swimmers by name, club, or region..."
                 className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <div className="relative overflow-visible">
-              <Select defaultValue="all">
+              <Select value={regionFilter} onValueChange={setRegionFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by region" />
                 </SelectTrigger>
                 <SelectContent className="z-[999999]">
                   <SelectItem value="all">All Regions</SelectItem>
-                  <SelectItem value="northeast">Northeast</SelectItem>
-                  <SelectItem value="southeast">Southeast</SelectItem>
-                  <SelectItem value="midwest">Midwest</SelectItem>
-                  <SelectItem value="west">West</SelectItem>
+                  <SelectItem value="Northeast">Northeast</SelectItem>
+                  <SelectItem value="Southeast">Southeast</SelectItem>
+                  <SelectItem value="Midwest">Midwest</SelectItem>
+                  <SelectItem value="West">West</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="relative overflow-visible">
-              <Select defaultValue="all">
+              <Select value={ageFilter} onValueChange={setAgeFilter}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Filter by age" />
                 </SelectTrigger>
@@ -78,185 +143,58 @@ export default function SwimmersPage() {
 
       {/* Swimmers Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 relative z-0">
-        {[
-          {
-            id: 1,
-            name: "Sarah Johnson",
-            club: "Aqua Force",
-            region: "Northeast",
-            state: "NY",
-            age: 16,
-            events: 12,
-            personalBests: 8,
-            improvement: "+12.5%",
-            avatar: "/avatars/sarah.jpg"
-          },
-          {
-            id: 2,
-            name: "Michael Chen",
-            club: "Swim Elite",
-            region: "West",
-            state: "CA",
-            age: 15,
-            events: 15,
-            personalBests: 11,
-            improvement: "+8.3%",
-            avatar: "/avatars/michael.jpg"
-          },
-          {
-            id: 3,
-            name: "Emma Davis",
-            club: "Wave Riders",
-            region: "Southeast",
-            state: "FL",
-            age: 14,
-            events: 10,
-            personalBests: 6,
-            improvement: "+15.2%",
-            avatar: "/avatars/emma.jpg"
-          },
-          {
-            id: 4,
-            name: "Alex Thompson",
-            club: "Aqua Force",
-            region: "Northeast",
-            state: "MA",
-            age: 17,
-            events: 18,
-            personalBests: 14,
-            improvement: "+6.7%",
-            avatar: "/avatars/alex.jpg"
-          },
-          {
-            id: 5,
-            name: "Maria Garcia",
-            club: "Swim Elite",
-            region: "West",
-            state: "TX",
-            age: 16,
-            events: 13,
-            personalBests: 9,
-            improvement: "+11.8%",
-            avatar: "/avatars/maria.jpg"
-          },
-          {
-            id: 6,
-            name: "David Kim",
-            club: "Wave Riders",
-            region: "Southeast",
-            state: "GA",
-            age: 15,
-            events: 11,
-            personalBests: 7,
-            improvement: "+9.4%",
-            avatar: "/avatars/david.jpg"
-          }
-        ].map((swimmer) => (
+        {filteredSwimmers.map((swimmer) => (
           <Card key={swimmer.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={swimmer.avatar} alt={swimmer.name} />
-                  <AvatarFallback>
-                    {swimmer.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
+                  {getInitials(swimmer.name)}
+                </div>
                 <div className="flex-1">
                   <CardTitle className="text-lg">{swimmer.name}</CardTitle>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    <span>{swimmer.club}</span>
-                    <span>•</span>
-                    <span>{swimmer.state}</span>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {swimmer.club} • {getRegionAbbr(swimmer.region)}
+                  </p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Age:</span>
-                  <span className="font-medium">{swimmer.age}</span>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                  <span>Age: {swimmer.age}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Events:</span>
-                  <span className="font-medium">{swimmer.events}</span>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-muted-foreground" />
+                  <span>Events: {swimmer.event_count}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Personal Bests:</span>
-                  <span className="font-medium">{swimmer.personalBests}</span>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                  <span>Personal Bests: {swimmer.personal_bests}</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Improvement:</span>
-                  <span className="font-medium text-green-600">{swimmer.improvement}</span>
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <span>Total Times: {swimmer.total_times}</span>
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                  <Badge variant="secondary">{swimmer.region}</Badge>
-                  <div className="flex space-x-1">
-                    <Button size="sm" variant="outline">View</Button>
-                    <Button size="sm">Edit</Button>
-                  </div>
-                </div>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="secondary" className="text-xs">
+                  {swimmer.gender === 'M' ? 'Male' : 'Female'}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {swimmer.region}
+                </Badge>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Stats Summary */}
-      <div className="grid gap-4 md:grid-cols-4 relative z-0">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Swimmers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,247</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+12%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Swimmers</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">892</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+5%</span> this week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Personal Bests</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+8</span> this month
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Improvement</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">2.3%</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+0.5%</span> vs last quarter
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {filteredSwimmers.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No swimmers found matching your criteria.</p>
+        </div>
+      )}
     </div>
   );
 } 
