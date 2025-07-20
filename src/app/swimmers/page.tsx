@@ -70,7 +70,20 @@ export default function SwimmersPage() {
       (ageFilter === '13-14' && swimmer.age >= 13 && swimmer.age <= 14) ||
       (ageFilter === '15-16' && swimmer.age >= 15 && swimmer.age <= 16) ||
       (ageFilter === '17-18' && swimmer.age >= 17 && swimmer.age <= 18) ||
-      (ageFilter === '19+' && swimmer.age >= 19);
+      (ageFilter === '19+' && swimmer.age >= 19) ||
+      (ageFilter === '18u' && swimmer.age <= 18) ||
+      (ageFilter === '7' && swimmer.age === 7) ||
+      (ageFilter === '8' && swimmer.age === 8) ||
+      (ageFilter === '9' && swimmer.age === 9) ||
+      (ageFilter === '10' && swimmer.age === 10) ||
+      (ageFilter === '11' && swimmer.age === 11) ||
+      (ageFilter === '12' && swimmer.age === 12) ||
+      (ageFilter === '13' && swimmer.age === 13) ||
+      (ageFilter === '14' && swimmer.age === 14) ||
+      (ageFilter === '15' && swimmer.age === 15) ||
+      (ageFilter === '16' && swimmer.age === 16) ||
+      (ageFilter === '17' && swimmer.age === 17) ||
+      (ageFilter === '18' && swimmer.age === 18);
 
     return matchesSearch && matchesRegion && matchesAge;
   });
@@ -133,7 +146,20 @@ export default function SwimmersPage() {
                   <SelectItem value="13-14">13-14</SelectItem>
                   <SelectItem value="15-16">15-16</SelectItem>
                   <SelectItem value="17-18">17-18</SelectItem>
-                  <SelectItem value="19+">19+</SelectItem>
+                  <SelectItem value="19+">19 & Over</SelectItem>
+                  <SelectItem value="7">7</SelectItem>
+                  <SelectItem value="8">8</SelectItem>
+                  <SelectItem value="9">9</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="11">11</SelectItem>
+                  <SelectItem value="12">12</SelectItem>
+                  <SelectItem value="13">13</SelectItem>
+                  <SelectItem value="14">14</SelectItem>
+                  <SelectItem value="15">15</SelectItem>
+                  <SelectItem value="16">16</SelectItem>
+                  <SelectItem value="17">17</SelectItem>
+                  <SelectItem value="18">18</SelectItem>
+                  <SelectItem value="18u">18 & Under</SelectItem>
                 </SelectContent>
               </Select>
             </div>

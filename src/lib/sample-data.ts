@@ -55,6 +55,54 @@ export async function seedSampleData() {
         age: 16,
         gender: 'M',
       },
+      {
+        name: 'Sophie Williams',
+        email: 'sophie.williams@example.com',
+        club: 'Little Dolphins',
+        region: 'Northeast',
+        age: 8,
+        gender: 'F',
+      },
+      {
+        name: 'Lucas Martinez',
+        email: 'lucas.martinez@example.com',
+        club: 'Swim Kids',
+        region: 'Southeast',
+        age: 10,
+        gender: 'M',
+      },
+      {
+        name: 'Zoe Anderson',
+        email: 'zoe.anderson@example.com',
+        club: 'Aqua Force',
+        region: 'Northeast',
+        age: 12,
+        gender: 'F',
+      },
+      {
+        name: 'Ethan Davis',
+        email: 'ethan.davis@example.com',
+        club: 'Swim Elite',
+        region: 'West',
+        age: 13,
+        gender: 'M',
+      },
+      {
+        name: 'Ava Wilson',
+        email: 'ava.wilson@example.com',
+        club: 'Tidal Wave',
+        region: 'Midwest',
+        age: 11,
+        gender: 'F',
+      },
+      {
+        name: 'Noah Brown',
+        email: 'noah.brown@example.com',
+        club: 'Ocean Riders',
+        region: 'West',
+        age: 9,
+        gender: 'M',
+      },
     ];
 
     const insertedSwimmers = await db.insert(swimmers).values(swimmerData).returning();
@@ -227,6 +275,60 @@ export async function seedSampleData() {
           event_id: insertedEvents[12].id, // 200 IM M
           time_seconds: '124.89',
           time_formatted: '2:04.89',
+          is_personal_best: true,
+        },
+        // Sophie Williams times (8 years old)
+        {
+          swimmer_id: insertedSwimmers[6].id,
+          meet_id: insertedMeets[0].id,
+          event_id: insertedEvents[1].id, // 50 Free F
+          time_seconds: '45.23',
+          time_formatted: '45.23',
+          is_personal_best: true,
+        },
+        // Lucas Martinez times (10 years old)
+        {
+          swimmer_id: insertedSwimmers[7].id,
+          meet_id: insertedMeets[0].id,
+          event_id: insertedEvents[0].id, // 50 Free M
+          time_seconds: '42.15',
+          time_formatted: '42.15',
+          is_personal_best: true,
+        },
+        // Zoe Anderson times (12 years old)
+        {
+          swimmer_id: insertedSwimmers[8].id,
+          meet_id: insertedMeets[0].id,
+          event_id: insertedEvents[1].id, // 50 Free F
+          time_seconds: '32.45',
+          time_formatted: '32.45',
+          is_personal_best: true,
+        },
+        // Ethan Davis times (13 years old)
+        {
+          swimmer_id: insertedSwimmers[9].id,
+          meet_id: insertedMeets[0].id,
+          event_id: insertedEvents[0].id, // 50 Free M
+          time_seconds: '29.78',
+          time_formatted: '29.78',
+          is_personal_best: true,
+        },
+        // Ava Wilson times (11 years old)
+        {
+          swimmer_id: insertedSwimmers[10].id,
+          meet_id: insertedMeets[0].id,
+          event_id: insertedEvents[1].id, // 50 Free F
+          time_seconds: '35.12',
+          time_formatted: '35.12',
+          is_personal_best: true,
+        },
+        // Noah Brown times (9 years old)
+        {
+          swimmer_id: insertedSwimmers[11].id,
+          meet_id: insertedMeets[0].id,
+          event_id: insertedEvents[0].id, // 50 Free M
+          time_seconds: '48.67',
+          time_formatted: '48.67',
           is_personal_best: true,
         },
       ];
