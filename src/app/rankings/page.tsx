@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { 
   Medal,
 } from "lucide-react";
-import { getLSCsByRegion, getAllLSCs } from '@/lib/lsc-data';
+import { SwimmingFilters, type SwimmingFilters as SwimmingFiltersType } from '@/components/ui/swimming-filters';
 
 interface Ranking {
   rank: number;
@@ -31,7 +31,9 @@ interface Ranking {
 export default function RankingsPage() {
   const [rankings, setRankings] = useState<Ranking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<SwimmingFiltersType>({
+    timeStandard: 'all',
+    course: 'SCY',
     stroke: 'Free',
     distance: '100',
     region: 'all',
@@ -40,13 +42,12 @@ export default function RankingsPage() {
     gender: 'all'
   });
 
-  // Get available LSCs based on selected region
-  const availableLSCs = filters.region === 'all' ? getAllLSCs() : getLSCsByRegion(filters.region);
-
   const fetchRankings = async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
+        timeStandard: filters.timeStandard,
+        course: filters.course,
         stroke: filters.stroke,
         distance: filters.distance,
         region: filters.region,
@@ -118,98 +119,10 @@ export default function RankingsPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <Select value={filters.stroke} onValueChange={(value) => setFilters(prev => ({ ...prev, stroke: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select stroke" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Free">Freestyle</SelectItem>
-                <SelectItem value="Back">Backstroke</SelectItem>
-                <SelectItem value="Breast">Breaststroke</SelectItem>
-                <SelectItem value="Fly">Butterfly</SelectItem>
-                <SelectItem value="IM">Individual Medley</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.distance} onValueChange={(value) => setFilters(prev => ({ ...prev, distance: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select distance" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="50">50m</SelectItem>
-                <SelectItem value="100">100m</SelectItem>
-                <SelectItem value="200">200m</SelectItem>
-                <SelectItem value="400">400m</SelectItem>
-                <SelectItem value="800">800m</SelectItem>
-                <SelectItem value="1500">1500m</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.region} onValueChange={(value) => setFilters(prev => ({ ...prev, region: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select region" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Regions</SelectItem>
-                <SelectItem value="Eastern">Eastern</SelectItem>
-                <SelectItem value="Southern">Southern</SelectItem>
-                <SelectItem value="Central">Central</SelectItem>
-                <SelectItem value="Western">Western</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.lsc} onValueChange={(value) => setFilters(prev => ({ ...prev, lsc: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select LSC" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All LSCs</SelectItem>
-                {availableLSCs.map(lsc => (
-                  <SelectItem key={lsc.code} value={lsc.code}>{lsc.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.ageGroup} onValueChange={(value) => setFilters(prev => ({ ...prev, ageGroup: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select age group" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Ages</SelectItem>
-                <SelectItem value="10u">10 & Under</SelectItem>
-                <SelectItem value="11-12">11-12</SelectItem>
-                <SelectItem value="13-14">13-14</SelectItem>
-                <SelectItem value="15-16">15-16</SelectItem>
-                <SelectItem value="17-18">17-18</SelectItem>
-                <SelectItem value="19+">19 & Over</SelectItem>
-                <SelectItem value="7">7</SelectItem>
-                <SelectItem value="8">8</SelectItem>
-                <SelectItem value="9">9</SelectItem>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="11">11</SelectItem>
-                <SelectItem value="12">12</SelectItem>
-                <SelectItem value="13">13</SelectItem>
-                <SelectItem value="14">14</SelectItem>
-                <SelectItem value="15">15</SelectItem>
-                <SelectItem value="16">16</SelectItem>
-                <SelectItem value="17">17</SelectItem>
-                <SelectItem value="18">18</SelectItem>
-                <SelectItem value="18u">18 & Under</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={filters.gender} onValueChange={(value) => setFilters(prev => ({ ...prev, gender: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Genders</SelectItem>
-                <SelectItem value="M">Male</SelectItem>
-                <SelectItem value="F">Female</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SwimmingFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
         </CardContent>
       </Card>
 
@@ -218,7 +131,7 @@ export default function RankingsPage() {
         <CardHeader>
           <CardTitle>Top Rankings</CardTitle>
           <CardDescription>
-            {filters.distance}m {filters.stroke} - {filters.region === 'all' ? 'All Regions' : filters.region} - {rankings.length} results
+            {filters.distance} {filters.stroke} {filters.course} - {filters.region === 'all' ? 'All Regions' : filters.region} - {rankings.length} results
           </CardDescription>
         </CardHeader>
         <CardContent>

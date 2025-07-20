@@ -1,8 +1,9 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Target, 
   TrendingUp, 
@@ -10,8 +11,21 @@ import {
   CheckCircle,
   Users
 } from "lucide-react";
+import { useState } from 'react';
+import { SwimmingFilters, type SwimmingFilters as SwimmingFiltersType } from '@/components/ui/swimming-filters';
 
 export default function StandardsPage() {
+  const [filters, setFilters] = useState<SwimmingFiltersType>({
+    timeStandard: 'all',
+    course: 'SCY',
+    stroke: 'Free',
+    distance: '100',
+    region: 'all',
+    lsc: 'all',
+    ageGroup: 'all',
+    gender: 'all'
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -25,53 +39,10 @@ export default function StandardsPage() {
       {/* Filters */}
       <Card className="relative z-0">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select defaultValue="lcm">
-              <SelectTrigger>
-                <SelectValue placeholder="Select course" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lcm">Long Course (LCM)</SelectItem>
-                <SelectItem value="scm">Short Course (SCM)</SelectItem>
-                <SelectItem value="scy">Short Course Yards (SCY)</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select defaultValue="15-16">
-              <SelectTrigger>
-                <SelectValue placeholder="Select age group" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10u">10 & Under</SelectItem>
-                <SelectItem value="11-12">11-12</SelectItem>
-                <SelectItem value="13-14">13-14</SelectItem>
-                <SelectItem value="15-16">15-16</SelectItem>
-                <SelectItem value="17-18">17-18</SelectItem>
-                <SelectItem value="19+">19+</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select defaultValue="female">
-              <SelectTrigger>
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="male">Male</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select defaultValue="2024">
-              <SelectTrigger>
-                <SelectValue placeholder="Select year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <SwimmingFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+          />
         </CardContent>
       </Card>
 
@@ -135,7 +106,7 @@ export default function StandardsPage() {
         <CardHeader>
           <CardTitle>Qualifying Times</CardTitle>
           <CardDescription>
-            15-16 Female - Long Course - 2024
+            {filters.ageGroup === 'all' ? 'All Ages' : filters.ageGroup} - {filters.gender === 'all' ? 'All Genders' : filters.gender === 'M' ? 'Male' : 'Female'} - {filters.course} - 2024
           </CardDescription>
         </CardHeader>
         <CardContent>

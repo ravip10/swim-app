@@ -6,6 +6,8 @@ import { eq, asc } from 'drizzle-orm';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const timeStandard = searchParams.get('timeStandard') || 'all';
+    const course = searchParams.get('course') || 'SCY';
     const stroke = searchParams.get('stroke') || 'Free';
     const distance = searchParams.get('distance') || '100';
     const region = searchParams.get('region') || 'all';
@@ -49,6 +51,28 @@ export async function GET(request: NextRequest) {
 
     // Filter results in the application
     let filteredResults = results;
+
+    // Time Standard filter
+    if (timeStandard !== 'all') {
+      // For now, we'll filter based on time standards
+      // This would need to be enhanced with actual standard times
+      filteredResults = filteredResults.filter(r => {
+        const time = parseFloat(r.time_seconds);
+        // Basic time standard filtering (would need actual standards data)
+        if (timeStandard === 'AAAA' && time < 25.0) return true;
+        if (timeStandard === 'AAA' && time < 26.0) return true;
+        if (timeStandard === 'AA' && time < 27.0) return true;
+        if (timeStandard === 'A' && time < 28.0) return true;
+        return false;
+      });
+    }
+
+    // Course filter
+    if (course !== 'all') {
+      // For now, we'll assume all results are SCY
+      // This would need to be enhanced with actual course data
+      filteredResults = filteredResults.filter(r => true); // Placeholder
+    }
 
     // Stroke filter
     if (stroke !== 'all') {
