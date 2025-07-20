@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { swimmers, times } from '@/lib/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, asc } from 'drizzle-orm';
 
 export async function GET() {
   try {
@@ -13,18 +13,19 @@ export async function GET() {
         email: swimmers.email,
         club: swimmers.club,
         region: swimmers.region,
+        lsc: swimmers.lsc,
         age: swimmers.age,
         gender: swimmers.gender,
+        total_events: sql<number>`count(distinct ${times.event_id})`,
+        personal_bests: sql<number>`count(distinct case when ${times.is_personal_best} then ${times.event_id} end)`,
+        best_time: sql<string>`min(${times.time_seconds})`,
         created_at: swimmers.created_at,
         updated_at: swimmers.updated_at,
-        event_count: sql<number>`count(distinct ${times.event_id})`,
-        personal_bests: sql<number>`count(case when ${times.is_personal_best} = true then 1 end)`,
-        total_times: sql<number>`count(${times.id})`,
       })
       .from(swimmers)
       .leftJoin(times, eq(swimmers.id, times.swimmer_id))
-      .groupBy(swimmers.id, swimmers.name, swimmers.email, swimmers.club, swimmers.region, swimmers.age, swimmers.gender, swimmers.created_at, swimmers.updated_at)
-      .orderBy(swimmers.name);
+      .groupBy(swimmers.id)
+      .orderBy(asc(swimmers.name));
 
     return NextResponse.json(swimmersWithStats);
   } catch (error) {

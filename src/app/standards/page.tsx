@@ -5,10 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Target, 
-  TrendingUp,
+  TrendingUp, 
   Award,
   CheckCircle,
-  Clock,
   Users
 } from "lucide-react";
 

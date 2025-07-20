@@ -1,16 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
-  TrendingUp, 
-  Users, 
   Trophy, 
-  Target, 
-  Clock, 
-  Award,
-  ArrowUpRight,
-  ArrowDownRight
+  TrendingUp, 
+  Target,
+  Users,
+  Award
 } from "lucide-react";
 
 export default function HomePage() {

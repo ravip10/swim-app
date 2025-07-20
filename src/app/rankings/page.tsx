@@ -1,21 +1,112 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
-  Trophy, 
-  TrendingUp, 
-  MapPin,
-  Award,
   Medal,
-  Target
 } from "lucide-react";
+import { getLSCsByRegion, getAllLSCs } from '@/lib/lsc-data';
+
+interface Ranking {
+  rank: number;
+  swimmer_id: string;
+  name: string;
+  club: string;
+  region: string;
+  lsc: string;
+  age: number;
+  gender: string;
+  time_seconds: string;
+  time_formatted: string;
+  event_name: string;
+  meet_name: string;
+  meet_date: string;
+  is_personal_best: boolean;
+}
 
 export default function RankingsPage() {
+  const [rankings, setRankings] = useState<Ranking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    stroke: 'Free',
+    distance: '100',
+    region: 'all',
+    lsc: 'all',
+    ageGroup: 'all',
+    gender: 'all'
+  });
+
+  // Get available LSCs based on selected region
+  const availableLSCs = filters.region === 'all' ? getAllLSCs() : getLSCsByRegion(filters.region);
+
+  useEffect(() => {
+    fetchRankings();
+  }, [filters]);
+
+  // Reset LSC when region changes
+  useEffect(() => {
+    if (filters.region === 'all') {
+      setFilters(prev => ({ ...prev, lsc: 'all' }));
+    }
+  }, [filters.region]);
+
+  const fetchRankings = async () => {
+    try {
+      setLoading(true);
+      const params = new URLSearchParams({
+        stroke: filters.stroke,
+        distance: filters.distance,
+        region: filters.region,
+        lsc: filters.lsc,
+        ageGroup: filters.ageGroup,
+        gender: filters.gender,
+        limit: '100'
+      });
+      
+      const response = await fetch(`/api/rankings?${params}`);
+      const data = await response.json();
+      setRankings(data);
+    } catch (error) {
+      console.error('Error fetching rankings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const getRegionAbbr = (region: string) => {
+    const regionMap: { [key: string]: string } = {
+      'Eastern': 'E',
+      'Southern': 'S', 
+      'Central': 'C',
+      'Western': 'W',
+    };
+    return regionMap[region] || region.substring(0, 2).toUpperCase();
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading rankings...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Rankings</h1>
@@ -27,21 +118,21 @@ export default function RankingsPage() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select defaultValue="freestyle">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <Select value={filters.stroke} onValueChange={(value) => setFilters(prev => ({ ...prev, stroke: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select stroke" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="freestyle">Freestyle</SelectItem>
-                <SelectItem value="backstroke">Backstroke</SelectItem>
-                <SelectItem value="breaststroke">Breaststroke</SelectItem>
-                <SelectItem value="butterfly">Butterfly</SelectItem>
-                <SelectItem value="im">Individual Medley</SelectItem>
+                <SelectItem value="Free">Freestyle</SelectItem>
+                <SelectItem value="Back">Backstroke</SelectItem>
+                <SelectItem value="Breast">Breaststroke</SelectItem>
+                <SelectItem value="Fly">Butterfly</SelectItem>
+                <SelectItem value="IM">Individual Medley</SelectItem>
               </SelectContent>
             </Select>
 
-            <Select defaultValue="100">
+            <Select value={filters.distance} onValueChange={(value) => setFilters(prev => ({ ...prev, distance: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select distance" />
               </SelectTrigger>
@@ -55,27 +146,67 @@ export default function RankingsPage() {
               </SelectContent>
             </Select>
 
-            <Select defaultValue="lcm">
-              <SelectTrigger>
-                <SelectValue placeholder="Select course" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lcm">Long Course (LCM)</SelectItem>
-                <SelectItem value="scm">Short Course (SCM)</SelectItem>
-                <SelectItem value="scy">Short Course Yards (SCY)</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select defaultValue="all">
+            <Select value={filters.region} onValueChange={(value) => setFilters(prev => ({ ...prev, region: value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Select region" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Regions</SelectItem>
-                <SelectItem value="northeast">Northeast</SelectItem>
-                <SelectItem value="southeast">Southeast</SelectItem>
-                <SelectItem value="midwest">Midwest</SelectItem>
-                <SelectItem value="west">West</SelectItem>
+                <SelectItem value="Eastern">Eastern</SelectItem>
+                <SelectItem value="Southern">Southern</SelectItem>
+                <SelectItem value="Central">Central</SelectItem>
+                <SelectItem value="Western">Western</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.lsc} onValueChange={(value) => setFilters(prev => ({ ...prev, lsc: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select LSC" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All LSCs</SelectItem>
+                {availableLSCs.map(lsc => (
+                  <SelectItem key={lsc.code} value={lsc.code}>{lsc.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.ageGroup} onValueChange={(value) => setFilters(prev => ({ ...prev, ageGroup: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select age group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Ages</SelectItem>
+                <SelectItem value="10u">10 & Under</SelectItem>
+                <SelectItem value="11-12">11-12</SelectItem>
+                <SelectItem value="13-14">13-14</SelectItem>
+                <SelectItem value="15-16">15-16</SelectItem>
+                <SelectItem value="17-18">17-18</SelectItem>
+                <SelectItem value="19+">19 & Over</SelectItem>
+                <SelectItem value="7">7</SelectItem>
+                <SelectItem value="8">8</SelectItem>
+                <SelectItem value="9">9</SelectItem>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="11">11</SelectItem>
+                <SelectItem value="12">12</SelectItem>
+                <SelectItem value="13">13</SelectItem>
+                <SelectItem value="14">14</SelectItem>
+                <SelectItem value="15">15</SelectItem>
+                <SelectItem value="16">16</SelectItem>
+                <SelectItem value="17">17</SelectItem>
+                <SelectItem value="18">18</SelectItem>
+                <SelectItem value="18u">18 & Under</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filters.gender} onValueChange={(value) => setFilters(prev => ({ ...prev, gender: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Genders</SelectItem>
+                <SelectItem value="M">Male</SelectItem>
+                <SelectItem value="F">Female</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -85,9 +216,9 @@ export default function RankingsPage() {
       {/* Rankings Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Top 100 Rankings</CardTitle>
+          <CardTitle>Top Rankings</CardTitle>
           <CardDescription>
-            100m Freestyle - Long Course - All Regions
+            {filters.distance}m {filters.stroke} - {filters.region === 'all' ? 'All Regions' : filters.region} - {rankings.length} results
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -99,99 +230,44 @@ export default function RankingsPage() {
                 <TableHead>Time</TableHead>
                 <TableHead>Club</TableHead>
                 <TableHead>Region</TableHead>
-                <TableHead>State</TableHead>
+                <TableHead>LSC</TableHead>
                 <TableHead>Age</TableHead>
                 <TableHead>Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {[
-                {
-                  rank: 1,
-                  name: "Sarah Johnson",
-                  time: "54.23",
-                  club: "Aqua Force",
-                  region: "Northeast",
-                  state: "NY",
-                  age: 16,
-                  date: "2024-03-15",
-                  avatar: "/avatars/sarah.jpg"
-                },
-                {
-                  rank: 2,
-                  name: "Michael Chen",
-                  time: "54.45",
-                  club: "Swim Elite",
-                  region: "West",
-                  state: "CA",
-                  age: 15,
-                  date: "2024-03-10",
-                  avatar: "/avatars/michael.jpg"
-                },
-                {
-                  rank: 3,
-                  name: "Emma Davis",
-                  time: "54.67",
-                  club: "Wave Riders",
-                  region: "Southeast",
-                  state: "FL",
-                  age: 14,
-                  date: "2024-03-12",
-                  avatar: "/avatars/emma.jpg"
-                },
-                {
-                  rank: 4,
-                  name: "Alex Thompson",
-                  time: "54.89",
-                  club: "Aqua Force",
-                  region: "Northeast",
-                  state: "MA",
-                  age: 17,
-                  date: "2024-03-08",
-                  avatar: "/avatars/alex.jpg"
-                },
-                {
-                  rank: 5,
-                  name: "Maria Garcia",
-                  time: "55.12",
-                  club: "Swim Elite",
-                  region: "West",
-                  state: "TX",
-                  age: 16,
-                  date: "2024-03-14",
-                  avatar: "/avatars/maria.jpg"
-                }
-              ].map((swimmer) => (
-                <TableRow key={swimmer.rank}>
+              {rankings.map((ranking) => (
+                <TableRow key={`${ranking.swimmer_id}-${ranking.time_seconds}`}>
                   <TableCell className="font-medium">
                     <div className="flex items-center space-x-2">
-                      {swimmer.rank <= 3 ? (
+                      {ranking.rank <= 3 ? (
                         <Medal className="h-4 w-4 text-yellow-500" />
                       ) : (
                         <span className="w-4 h-4"></span>
                       )}
-                      <span>{swimmer.rank}</span>
+                      <span>{ranking.rank}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={swimmer.avatar} alt={swimmer.name} />
                         <AvatarFallback>
-                          {swimmer.name.split(' ').map(n => n[0]).join('')}
+                          {getInitials(ranking.name)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{swimmer.name}</span>
+                      <span className="font-medium">{ranking.name}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="font-mono">{swimmer.time}</TableCell>
-                  <TableCell>{swimmer.club}</TableCell>
+                  <TableCell className="font-mono">{ranking.time_formatted}</TableCell>
+                  <TableCell>{ranking.club}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{swimmer.region}</Badge>
+                    <Badge variant="secondary">{getRegionAbbr(ranking.region)}</Badge>
                   </TableCell>
-                  <TableCell>{swimmer.state}</TableCell>
-                  <TableCell>{swimmer.age}</TableCell>
-                  <TableCell>{swimmer.date}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{ranking.lsc}</Badge>
+                  </TableCell>
+                  <TableCell>{ranking.age}</TableCell>
+                  <TableCell>{formatDate(ranking.meet_date)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -199,103 +275,11 @@ export default function RankingsPage() {
         </CardContent>
       </Card>
 
-      {/* Regional Breakdown */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Regional Performance</CardTitle>
-            <CardDescription>
-              Top performers by region
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { region: "Northeast", swimmers: 28, avgTime: "55.2" },
-                { region: "Southeast", swimmers: 32, avgTime: "55.8" },
-                { region: "Midwest", swimmers: 25, avgTime: "56.1" },
-                { region: "West", swimmers: 35, avgTime: "54.9" }
-              ].map((region) => (
-                <div key={region.region} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <p className="font-medium">{region.region}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {region.swimmers} swimmers
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono font-medium">{region.avgTime}</p>
-                    <p className="text-sm text-muted-foreground">avg time</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Age Group Leaders</CardTitle>
-            <CardDescription>
-              Best times by age group
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { ageGroup: "13-14", name: "Emma Davis", time: "54.67" },
-                { ageGroup: "15-16", name: "Sarah Johnson", time: "54.23" },
-                { ageGroup: "17-18", name: "Alex Thompson", time: "54.89" },
-                { ageGroup: "19+", name: "David Kim", time: "53.45" }
-              ].map((leader) => (
-                <div key={leader.ageGroup} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <p className="font-medium">{leader.ageGroup}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {leader.name}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-mono font-medium">{leader.time}</p>
-                    <Badge variant="outline">Leader</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Standards Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Standards Progress</CardTitle>
-          <CardDescription>
-            Swimmers qualifying for different standards
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            {[
-              { standard: "AAAA", count: 12, color: "bg-purple-500" },
-              { standard: "AAA", count: 28, color: "bg-blue-500" },
-              { standard: "AA", count: 45, color: "bg-green-500" },
-              { standard: "A", count: 67, color: "bg-yellow-500" }
-            ].map((standard) => (
-              <div key={standard.standard} className="text-center">
-                <div className={`${standard.color} text-white rounded-lg p-4 mb-2`}>
-                  <Trophy className="h-8 w-8 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">{standard.count}</div>
-                  <div className="text-sm opacity-90">{standard.standard}</div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {standard.count} swimmers qualified
-                </p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {rankings.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">No rankings found matching your criteria.</p>
+        </div>
+      )}
     </div>
   );
 } 

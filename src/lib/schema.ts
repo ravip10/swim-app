@@ -4,11 +4,12 @@ import { pgTable, text, timestamp, integer, decimal, boolean, uuid } from 'drizz
 export const swimmers = pgTable('swimmers', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  email: text('email'),
-  club: text('club'),
-  region: text('region'),
-  age: integer('age'),
-  gender: text('gender'),
+  email: text('email').notNull().unique(),
+  club: text('club').notNull(),
+  region: text('region').notNull(), // Zone (Northeast, Southeast, etc.)
+  lsc: text('lsc'), // Local Swimming Committee
+  age: integer('age').notNull(),
+  gender: text('gender').notNull(), // M or F
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });

@@ -8,7 +8,6 @@ import {
   MapPin,
   Users,
   Award,
-  Clock,
   TrendingUp
 } from "lucide-react";
 

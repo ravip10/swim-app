@@ -1,11 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Search, TrendingUp, Trophy, Target } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Search, 
+  Trophy, 
+  TrendingUp, 
+  Target
+} from "lucide-react";
+import { getLSCsByRegion, getAllLSCs } from '@/lib/lsc-data';
 
 interface Swimmer {
   id: string;
@@ -13,11 +19,14 @@ interface Swimmer {
   email: string;
   club: string;
   region: string;
+  lsc: string;
   age: number;
   gender: string;
-  event_count: string;
-  personal_bests: string;
-  total_times: string;
+  total_events: number;
+  personal_bests: number;
+  best_time: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function SwimmersPage() {
@@ -25,7 +34,18 @@ export default function SwimmersPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [regionFilter, setRegionFilter] = useState('all');
+  const [lscFilter, setLscFilter] = useState('all');
   const [ageFilter, setAgeFilter] = useState('all');
+
+  // Get available LSCs based on selected region
+  const availableLSCs = regionFilter === 'all' ? getAllLSCs() : getLSCsByRegion(regionFilter);
+
+  // Reset LSC when region changes
+  useEffect(() => {
+    if (regionFilter === 'all') {
+      setLscFilter('all');
+    }
+  }, [regionFilter]);
 
   useEffect(() => {
     fetchSwimmers();
@@ -49,10 +69,10 @@ export default function SwimmersPage() {
 
   const getRegionAbbr = (region: string) => {
     const regionMap: { [key: string]: string } = {
-      'Northeast': 'NE',
-      'Southeast': 'SE', 
-      'Midwest': 'MW',
-      'West': 'W',
+      'Eastern': 'E',
+      'Southern': 'S', 
+      'Central': 'C',
+      'Western': 'W',
     };
     return regionMap[region] || region.substring(0, 2).toUpperCase();
   };
@@ -63,6 +83,8 @@ export default function SwimmersPage() {
                          swimmer.region.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesRegion = regionFilter === 'all' || swimmer.region === regionFilter;
+    
+    const matchesLSC = lscFilter === 'all' || swimmer.lsc === lscFilter;
     
     const matchesAge = ageFilter === 'all' || 
       (ageFilter === '10u' && swimmer.age <= 10) ||
@@ -85,7 +107,7 @@ export default function SwimmersPage() {
       (ageFilter === '17' && swimmer.age === 17) ||
       (ageFilter === '18' && swimmer.age === 18);
 
-    return matchesSearch && matchesRegion && matchesAge;
+    return matchesSearch && matchesRegion && matchesLSC && matchesAge;
   });
 
   if (loading) {
@@ -127,10 +149,23 @@ export default function SwimmersPage() {
                 </SelectTrigger>
                 <SelectContent className="z-[999999]">
                   <SelectItem value="all">All Regions</SelectItem>
-                  <SelectItem value="Northeast">Northeast</SelectItem>
-                  <SelectItem value="Southeast">Southeast</SelectItem>
-                  <SelectItem value="Midwest">Midwest</SelectItem>
-                  <SelectItem value="West">West</SelectItem>
+                  <SelectItem value="Eastern">Eastern</SelectItem>
+                  <SelectItem value="Southern">Southern</SelectItem>
+                  <SelectItem value="Central">Central</SelectItem>
+                  <SelectItem value="Western">Western</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="relative overflow-visible">
+              <Select value={lscFilter} onValueChange={setLscFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by LSC" />
+                </SelectTrigger>
+                <SelectContent className="z-[999999]">
+                  <SelectItem value="all">All LSCs</SelectItem>
+                  {availableLSCs.map(lsc => (
+                    <SelectItem key={lsc.code} value={lsc.code}>{lsc.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -192,7 +227,7 @@ export default function SwimmersPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-muted-foreground" />
-                  <span>Events: {swimmer.event_count}</span>
+                  <span>Events: {swimmer.total_events}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -200,7 +235,7 @@ export default function SwimmersPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4 text-muted-foreground" />
-                  <span>Total Times: {swimmer.total_times}</span>
+                  <span>Best Time: {swimmer.best_time ? `${swimmer.best_time}s` : 'N/A'}</span>
                 </div>
               </div>
               <div className="flex gap-2">

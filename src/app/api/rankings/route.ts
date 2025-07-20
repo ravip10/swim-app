@@ -1,78 +1,122 @@
 import { NextRequest, NextResponse } from 'next/server';
-import sql from '@/lib/db';
+import { db } from '@/lib/db';
+import { swimmers, times, events, meets } from '@/lib/schema';
+import { eq, asc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const event = searchParams.get('event');
-    const course = searchParams.get('course');
-    const region = searchParams.get('region');
-    const ageGroup = searchParams.get('ageGroup');
+    const stroke = searchParams.get('stroke') || 'Free';
+    const distance = searchParams.get('distance') || '100';
+    const region = searchParams.get('region') || 'all';
+    const lsc = searchParams.get('lsc') || 'all';
+    const ageGroup = searchParams.get('ageGroup') || 'all';
+    const gender = searchParams.get('gender') || 'all';
     const limit = parseInt(searchParams.get('limit') || '100');
 
-    let query = `
-      SELECT 
-        s.name,
-        s.club,
-        s.region,
-        s.state,
-        r.time_string,
-        r.time_ms,
-        r.rank,
-        r.percentile,
-        e.name as event_name,
-        e.distance,
-        e.stroke
-      FROM rankings r
-      JOIN swimmers s ON r.swimmer_id = s.id
-      JOIN events e ON r.event_id = e.id
-    `;
+    // For now, let's get all rankings and filter in the application
+    // This avoids the complex query builder issues
+    const results = await db
+      .select({
+        swimmer_id: swimmers.id,
+        name: swimmers.name,
+        club: swimmers.club,
+        region: swimmers.region,
+        lsc: swimmers.lsc,
+        age: swimmers.age,
+        gender: swimmers.gender,
+        time_seconds: times.time_seconds,
+        time_formatted: times.time_formatted,
+        event_name: events.name,
+        meet_name: meets.name,
+        meet_date: meets.date,
+        is_personal_best: times.is_personal_best,
+        stroke: events.stroke,
+        distance: events.distance,
+      })
+      .from(times)
+      .innerJoin(swimmers, eq(times.swimmer_id, swimmers.id))
+      .innerJoin(events, eq(times.event_id, events.id))
+      .innerJoin(meets, eq(times.meet_id, meets.id))
+      .orderBy(asc(times.time_seconds))
+      .limit(limit);
 
-    const conditions = [];
-    const params = [];
+    // Filter results in the application
+    let filteredResults = results;
 
-    if (event) {
-      conditions.push('e.name = $1');
-      params.push(event);
+    // Stroke filter
+    if (stroke !== 'all') {
+      filteredResults = filteredResults.filter(r => r.stroke === stroke);
     }
 
-    if (course) {
-      conditions.push('e.course_type = $2');
-      params.push(course);
+    // Distance filter
+    if (distance !== 'all') {
+      filteredResults = filteredResults.filter(r => r.distance === parseInt(distance));
     }
 
-    if (region && region !== 'all') {
-      conditions.push('r.region = $3');
-      params.push(region);
+    // Region filter
+    if (region !== 'all') {
+      filteredResults = filteredResults.filter(r => r.region === region);
     }
 
-    if (ageGroup && ageGroup !== 'all') {
-      conditions.push('r.age_group = $4');
-      params.push(ageGroup);
+    // LSC filter
+    if (lsc !== 'all') {
+      filteredResults = filteredResults.filter(r => r.lsc === lsc);
     }
 
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
+    // Gender filter
+    if (gender !== 'all') {
+      filteredResults = filteredResults.filter(r => r.gender === gender);
     }
 
-    query += `
-      ORDER BY r.rank ASC
-      LIMIT $${params.length + 1}
-    `;
-    params.push(limit);
+    // Age group filter
+    if (ageGroup !== 'all') {
+      if (ageGroup === '10u') {
+        filteredResults = filteredResults.filter(r => r.age && r.age <= 10);
+      } else if (ageGroup === '11-12') {
+        filteredResults = filteredResults.filter(r => r.age && r.age >= 11 && r.age <= 12);
+      } else if (ageGroup === '13-14') {
+        filteredResults = filteredResults.filter(r => r.age && r.age >= 13 && r.age <= 14);
+      } else if (ageGroup === '15-16') {
+        filteredResults = filteredResults.filter(r => r.age && r.age >= 15 && r.age <= 16);
+      } else if (ageGroup === '17-18') {
+        filteredResults = filteredResults.filter(r => r.age && r.age >= 17 && r.age <= 18);
+      } else if (ageGroup === '19+') {
+        filteredResults = filteredResults.filter(r => r.age && r.age >= 19);
+      } else if (ageGroup === '18u') {
+        filteredResults = filteredResults.filter(r => r.age && r.age <= 18);
+      } else {
+        // Individual age
+        const age = parseInt(ageGroup);
+        if (!isNaN(age)) {
+          filteredResults = filteredResults.filter(r => r.age === age);
+        }
+      }
+    }
 
-    const rankings = await sql.query(query, params);
+    // Add rank to each result
+    const rankings = filteredResults.map((result, index) => ({
+      rank: index + 1,
+      swimmer_id: result.swimmer_id,
+      name: result.name,
+      club: result.club,
+      region: result.region,
+      lsc: result.lsc,
+      age: result.age,
+      gender: result.gender,
+      time_seconds: result.time_seconds,
+      time_formatted: result.time_formatted,
+      event_name: result.event_name,
+      meet_name: result.meet_name,
+      meet_date: result.meet_date,
+      is_personal_best: result.is_personal_best,
+    }));
 
-    return NextResponse.json({
-      success: true,
-      data: rankings,
-      count: rankings.length
-    });
+    return NextResponse.json(rankings);
   } catch (error) {
     console.error('Error fetching rankings:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch rankings' },
-      { status: 500 }
-    );
+    return NextResponse.json({ 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 });
   }
 } 
