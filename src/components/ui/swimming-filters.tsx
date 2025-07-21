@@ -16,6 +16,7 @@ export interface SwimmingFilters {
   lsc: string;
   ageGroup: string;
   gender: string;
+  season: string;
 }
 
 interface SwimmingFiltersProps {
@@ -105,6 +106,18 @@ export function SwimmingFilters({
         </FilterSelect>
       )}
 
+      {/* Season Filter */}
+      <FilterSelect
+        label="Season"
+        value={filters.season}
+        onValueChange={(value) => handleFilterChange('season', value)}
+        placeholder="Season"
+      >
+        <SelectItem value="2024-2025">2024-2025</SelectItem>
+        <SelectItem value="2023-2024">2023-2024</SelectItem>
+        <SelectItem value="all">All Seasons</SelectItem>
+      </FilterSelect>
+
       {showCourse && (
         <FilterSelect
           label="Course"
@@ -126,10 +139,10 @@ export function SwimmingFilters({
           placeholder="Stroke"
         >
           <SelectItem value="Free">Freestyle</SelectItem>
-          <SelectItem value="Back">Backstroke</SelectItem>
-          <SelectItem value="Breast">Breaststroke</SelectItem>
-          <SelectItem value="Fly">Butterfly</SelectItem>
-          <SelectItem value="IM">Individual Medley</SelectItem>
+          <SelectItem value="Back">Back</SelectItem>
+          <SelectItem value="Breast">Breast</SelectItem>
+          <SelectItem value="Fly">Fly</SelectItem>
+          <SelectItem value="IM">IM</SelectItem>
         </FilterSelect>
       )}
 
@@ -186,12 +199,25 @@ export function SwimmingFilters({
           placeholder="Age Group"
         >
           <SelectItem value="all">All Ages</SelectItem>
-          <SelectItem value="10-under">10 & Under</SelectItem>
+          <SelectItem value="10u">10 & Under</SelectItem>
           <SelectItem value="11-12">11-12</SelectItem>
           <SelectItem value="13-14">13-14</SelectItem>
           <SelectItem value="15-16">15-16</SelectItem>
           <SelectItem value="17-18">17-18</SelectItem>
-          <SelectItem value="Open">Open</SelectItem>
+          <SelectItem value="19+">19 & Over</SelectItem>
+          <SelectItem value="7">7</SelectItem>
+          <SelectItem value="8">8</SelectItem>
+          <SelectItem value="9">9</SelectItem>
+          <SelectItem value="10">10</SelectItem>
+          <SelectItem value="11">11</SelectItem>
+          <SelectItem value="12">12</SelectItem>
+          <SelectItem value="13">13</SelectItem>
+          <SelectItem value="14">14</SelectItem>
+          <SelectItem value="15">15</SelectItem>
+          <SelectItem value="16">16</SelectItem>
+          <SelectItem value="17">17</SelectItem>
+          <SelectItem value="18">18</SelectItem>
+          <SelectItem value="18u">18 & Under</SelectItem>
         </FilterSelect>
       )}
 

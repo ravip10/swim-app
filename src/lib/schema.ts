@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, decimal, boolean, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, decimal, boolean, uuid, jsonb } from 'drizzle-orm/pg-core';
 
 // Swimmers table
 export const swimmers = pgTable('swimmers', {
@@ -33,6 +33,7 @@ export const events = pgTable('events', {
   stroke: text('stroke').notNull(), // Free, Back, Breast, Fly, IM
   gender: text('gender'), // M, F, or null for mixed
   age_group: text('age_group'), // e.g., "13-14", "15-16"
+  course: text('course').notNull().default('SCY'), // SCY, LCM, SCM
 });
 
 // Times table (actual swim times)
@@ -47,7 +48,42 @@ export const times = pgTable('times', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-// Rankings table
+// Rankings Cache Table (for persistent storage)
+export const rankingsCache = pgTable('rankings_cache', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  swimmer_id: uuid('swimmer_id').references(() => swimmers.id).notNull(),
+  event_id: uuid('event_id').references(() => events.id).notNull(),
+  time_id: uuid('time_id').references(() => times.id).notNull(),
+  rank: integer('rank').notNull(),
+  total_swimmers: integer('total_swimmers').notNull(),
+  
+  // Filter Context (what makes this ranking unique)
+  stroke: text('stroke').notNull(),
+  distance: integer('distance').notNull(),
+  course: text('course').notNull(), // SCY, LCM, SCM
+  gender: text('gender').notNull(), // M, F
+  age_group: text('age_group').notNull(), // 8-under, 11-12, 13-14, etc.
+  region: text('region'), // Eastern, Southern, etc.
+  lsc: text('lsc'), // Local Swimming Committee
+  season: text('season').notNull(), // 2024, 2025, etc.
+  
+  // Metadata
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// Rankings Scraping Jobs Table
+export const rankingsJobs = pgTable('rankings_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  status: text('status').notNull(), // pending, running, completed, failed
+  filters: jsonb('filters').notNull(), // the filters used for scraping
+  total_records: integer('total_records'),
+  created_at: timestamp('created_at').defaultNow(),
+  completed_at: timestamp('completed_at'),
+  error_message: text('error_message'),
+});
+
+// Rankings table (legacy - keep for backward compatibility)
 export const rankings = pgTable('rankings', {
   id: uuid('id').primaryKey().defaultRandom(),
   swimmer_id: uuid('swimmer_id').references(() => swimmers.id).notNull(),
@@ -80,5 +116,9 @@ export type Time = typeof times.$inferSelect;
 export type NewTime = typeof times.$inferInsert;
 export type Ranking = typeof rankings.$inferSelect;
 export type NewRanking = typeof rankings.$inferInsert;
+export type RankingCache = typeof rankingsCache.$inferSelect;
+export type NewRankingCache = typeof rankingsCache.$inferInsert;
+export type RankingJob = typeof rankingsJobs.$inferSelect;
+export type NewRankingJob = typeof rankingsJobs.$inferInsert;
 export type Standard = typeof standards.$inferSelect;
 export type NewStandard = typeof standards.$inferInsert; 

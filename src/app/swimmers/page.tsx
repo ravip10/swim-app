@@ -163,8 +163,8 @@ export default function SwimmersPage() {
                 </SelectTrigger>
                 <SelectContent className="z-[999999]">
                   <SelectItem value="all">All LSCs</SelectItem>
-                  {availableLSCs.map(lsc => (
-                    <SelectItem key={lsc.code} value={lsc.code}>{lsc.name}</SelectItem>
+                  {availableLSCs.map((lsc, index) => (
+                    <SelectItem key={`${lsc.code}-${index}`} value={lsc.code}>{lsc.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -172,7 +172,17 @@ export default function SwimmersPage() {
             <div className="relative overflow-visible">
               <Select value={ageFilter} onValueChange={setAgeFilter}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by age" />
+                  <SelectValue placeholder="Filter by age">
+                    {ageFilter === 'all' ? 'All Ages' : 
+                     ageFilter === '10u' ? '10 & Under' :
+                     ageFilter === '11-12' ? '11-12' :
+                     ageFilter === '13-14' ? '13-14' :
+                     ageFilter === '15-16' ? '15-16' :
+                     ageFilter === '17-18' ? '17-18' :
+                     ageFilter === '19+' ? '19 & Over' :
+                     ageFilter === '18u' ? '18 & Under' :
+                     ageFilter}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="z-[999999]">
                   <SelectItem value="all">All Ages</SelectItem>

@@ -115,6 +115,15 @@ export async function seedSampleData() {
         age: 9,
         gender: 'M',
       },
+      {
+        name: 'Ilaria Prakash',
+        email: 'ilaria.prakash@example.com',
+        club: 'New Orleans Aqua',
+        region: 'Southern',
+        lsc: 'LA',
+        age: 8,
+        gender: 'F',
+      },
     ];
 
     const insertedSwimmers = await db.insert(swimmers).values(swimmerData).returning();
@@ -143,6 +152,20 @@ export async function seedSampleData() {
         season: '2024 Fall',
         level: 'Local',
       },
+      {
+        name: '17th Annual Splashin\' the Coast',
+        location: 'New Orleans Aquatic Center, LA',
+        date: new Date('2024-06-15'),
+        season: '2024 Summer',
+        level: 'Regional',
+      },
+      {
+        name: 'LA TAQ Tristan Vessel Invitational',
+        location: 'Baton Rouge Swim Center, LA',
+        date: new Date('2024-07-20'),
+        season: '2024 Summer',
+        level: 'State',
+      },
     ];
 
     const insertedMeets = await db.insert(meets).values(meetData).returning();
@@ -164,6 +187,13 @@ export async function seedSampleData() {
       { name: '100 Fly', distance: 100, stroke: 'Fly', gender: 'F', age_group: '15-16' },
       { name: '200 IM', distance: 200, stroke: 'IM', gender: 'M', age_group: '15-16' },
       { name: '200 IM', distance: 200, stroke: 'IM', gender: 'F', age_group: '15-16' },
+      // 8&U events for Ilaria Prakash
+      { name: '50 Free', distance: 50, stroke: 'Free', gender: 'F', age_group: '8-under' },
+      { name: '100 Free', distance: 100, stroke: 'Free', gender: 'F', age_group: '8-under' },
+      { name: '50 Fly', distance: 50, stroke: 'Fly', gender: 'F', age_group: '8-under' },
+      { name: '100 Fly', distance: 100, stroke: 'Fly', gender: 'F', age_group: '8-under' },
+      { name: '50 Back', distance: 50, stroke: 'Back', gender: 'F', age_group: '8-under' },
+      { name: '100 Back', distance: 100, stroke: 'Back', gender: 'F', age_group: '8-under' },
     ];
 
     const insertedEvents = await db.insert(events).values(eventData).returning();
@@ -341,6 +371,47 @@ export async function seedSampleData() {
           event_id: insertedEvents[0].id, // 50 Free M
           time_seconds: '48.67',
           time_formatted: '48.67',
+          is_personal_best: true,
+        },
+        // Ilaria Prakash times (8 years old) - based on SwimCloud data
+        {
+          swimmer_id: insertedSwimmers[12].id, // Ilaria is the 13th swimmer (index 12)
+          meet_id: insertedMeets[3].id, // 17th Annual Splashin' the Coast
+          event_id: insertedEvents[17].id, // 100 Fly F 8-under (index 17)
+          time_seconds: '121.74',
+          time_formatted: '2:01.74',
+          is_personal_best: true,
+        },
+        {
+          swimmer_id: insertedSwimmers[12].id,
+          meet_id: insertedMeets[4].id, // LA TAQ Tristan Vessel Invitational
+          event_id: insertedEvents[16].id, // 50 Fly F 8-under (index 16)
+          time_seconds: '45.23',
+          time_formatted: '45.23',
+          is_personal_best: true,
+        },
+        {
+          swimmer_id: insertedSwimmers[12].id,
+          meet_id: insertedMeets[4].id, // LA TAQ Tristan Vessel Invitational
+          event_id: insertedEvents[15].id, // 100 Free F 8-under (index 15)
+          time_seconds: '75.67',
+          time_formatted: '1:15.67',
+          is_personal_best: true,
+        },
+        {
+          swimmer_id: insertedSwimmers[12].id,
+          meet_id: insertedMeets[3].id, // 17th Annual Splashin' the Coast
+          event_id: insertedEvents[14].id, // 50 Free F 8-under (index 14)
+          time_seconds: '35.89',
+          time_formatted: '35.89',
+          is_personal_best: true,
+        },
+        {
+          swimmer_id: insertedSwimmers[12].id,
+          meet_id: insertedMeets[4].id, // LA TAQ Tristan Vessel Invitational
+          event_id: insertedEvents[19].id, // 100 Back F 8-under (index 19)
+          time_seconds: '85.34',
+          time_formatted: '1:25.34',
           is_personal_best: true,
         },
       ];
