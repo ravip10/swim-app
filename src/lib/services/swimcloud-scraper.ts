@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { rankingsCache, rankingsJobs } from '@/lib/schema';
+import { rankingsJobs } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 export interface SwimCloudFilters {

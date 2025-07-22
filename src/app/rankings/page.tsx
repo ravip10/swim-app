@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -117,7 +116,7 @@ export default function RankingsPage() {
 
   useEffect(() => {
     fetchRankings();
-  }, [filters, useCache]);
+  }, [filters, useCache, fetchRankings]);
 
   // Reset LSC when region changes
   useEffect(() => {

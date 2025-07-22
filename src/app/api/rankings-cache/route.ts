@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { rankingsCache, swimmers, events, times, meets } from '@/lib/schema';
-import { eq, and, asc, desc, isNull, isNotNull } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {

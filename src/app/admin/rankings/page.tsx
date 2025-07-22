@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
-  Play,
   Clock,
   CheckCircle,
   XCircle,
@@ -17,7 +16,14 @@ import {
 interface RankingJob {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
-  filters: any;
+  filters: {
+    stroke: string;
+    distance: string;
+    course: string;
+    gender: string;
+    ageGroup: string;
+    season: string;
+  };
   total_records?: number;
   created_at: string;
   completed_at?: string;

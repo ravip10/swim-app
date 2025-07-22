@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { swimmers, times, events, meets } from '@/lib/schema';
-import { eq, and, asc } from 'drizzle-orm';
-
-function getRelevantAgeGroups(age: number) {
-  const groups = [];
-  if (age <= 8) groups.push('8 and under');
-  if (age <= 10) groups.push('10 and under');
-  return groups;
-}
+import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -78,10 +71,14 @@ export async function GET(request: NextRequest) {
       .where(and(...conditions));
 
     // Helper: get rank for a swimmer/time in a given age group
-    function getRankForAgeGroup(target: any, group: string): number | null {
-      const filtered = allTimes.filter(t => t.event_age_group === group);
+    function getRankForAgeGroup(
+      target: { time_id: string },
+      group: string,
+      allTimes: Array<{ time_id: string; event_age_group: string | null; time_seconds: string }>
+    ): number | null {
+      const filtered = allTimes.filter((t) => t.event_age_group === group);
       const sorted = filtered.sort((a, b) => parseFloat(a.time_seconds) - parseFloat(b.time_seconds));
-      const idx = sorted.findIndex(t => t.time_id === target.time_id);
+      const idx = sorted.findIndex((t) => t.time_id === target.time_id);
       return idx >= 0 ? idx + 1 : null;
     }
 
@@ -90,13 +87,13 @@ export async function GET(request: NextRequest) {
       const ranks: Record<string, number | null> = {};
       // Always include rank in their event's age group
       if (t.event_age_group) {
-        ranks[t.event_age_group] = getRankForAgeGroup(t, t.event_age_group);
+        ranks[t.event_age_group] = getRankForAgeGroup(t, t.event_age_group, allTimes);
       }
       // If event_age_group is an exact age, also include 8&under and 10&under if applicable
       const ageNum = Number(t.event_age_group);
       if (!isNaN(ageNum)) {
-        if (ageNum <= 8) ranks['8 and under'] = getRankForAgeGroup(t, '8 and under');
-        if (ageNum <= 10) ranks['10 and under'] = getRankForAgeGroup(t, '10 and under');
+        if (ageNum <= 8) ranks['8 and under'] = getRankForAgeGroup(t, '8 and under', allTimes);
+        if (ageNum <= 10) ranks['10 and under'] = getRankForAgeGroup(t, '10 and under', allTimes);
       }
       return {
         ...t,
